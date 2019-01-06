@@ -57,6 +57,7 @@ The model.py file contains the code for training and saving the convolution neur
 #### 1. An appropriate model architecture has been employed
 
 I have adopted NVIDIA CNN architecture described in [End to End Learning for Self-Driving Cars](http://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf).
+
 ![alt text][image8]
 
 #### 2. Attempts to reduce overfitting in the model
