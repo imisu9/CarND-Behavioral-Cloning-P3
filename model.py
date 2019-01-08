@@ -36,12 +36,22 @@ def generator(samples, batch_size=batch_size):
       
       images = []
       angles = []
-      for batch_samples in batch_samples:
-        name = './IMG/ + batch_sample[0].split('/')[-1]
-        center_image = cv2.imread(name)
+      for batch_sample in batch_samples:
+        path = './IMG/'
+        center_image = cv2.imread(path + batch_sample[0].split('/')[-1])
         center_angle = float(batch_sample[3])
         images.append(center_image)
         angles.append(center_angle)
+        ############################
+        # Image preprocessing
+        # : similar to line detection
+        # : cropping could be done here
+        # 1. grayscale
+        # 2. center (=mean to zero)
+        # 3. Normalization
+        # 4. Image gradient, sobel x
+        # 5. Random left-right flip
+        ############################
       
       # Trim image to only see section with road
       X_train = np.array(images)
@@ -68,8 +78,7 @@ import tensorflow as tf
 ch, row, col = 3, 66, 200
 
 model = Sequential()
-# Normalize: preprocess incoming data, centered around zero with small standard deviation
-model.add(Lambda(lambda x: x/127.5 - 1., input_shape=(ch, row, col), output_shape=(ch, row, col)))
+model.add(Cropping2D(cropping2D((50,20),(0,0)), input_shape=(ch, row, col), output_shape=(ch, row, col)))
 # Convolutional layer: 5x5 kernel, 24@31x98
 model.add(Conv2D(24, 5, 5, strides=(2,2), padding='valid'))
 # Convolutional layer: 5x5 kernel, 36@14x47
