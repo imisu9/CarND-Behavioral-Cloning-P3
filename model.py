@@ -87,7 +87,7 @@ def generator(samples, batch_size=batch_size):
       images = []
       angles = []
       for batch_sample in batch_samples:
-        path = './IMG/'
+        path = '~/opt/carnd_p3/data/IMG/'
         # center image
         center_image = cv2.imread(path + batch_sample[0].split('/')[-1])
         center_angle = float(batch_sample[3])
