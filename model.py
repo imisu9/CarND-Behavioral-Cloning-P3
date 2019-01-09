@@ -18,6 +18,12 @@ from sklearn.model_selection import train_test_split
 train_sample, validation_sample = train_test_split(samples, test_size=validation_ratio)
 
 '''
+Analyse the data, especially for distribution of angles
+If needed, perform regularization and normalization on samples distribution
+'''
+
+
+'''
 Define 'generator' function
 '''
 
@@ -25,7 +31,51 @@ import cv2
 import numpy as np
 import sklearn
 
+def binary_img(img, s_thresh=(170,255), sx_thresh=(20,100)):
+  ############################
+  # Image preprocessing
+  # : similar to advanced line detection
+  # : cropping could be done here
+  # 1. cropping
+  # 2. center (=mean to zero)
+  # 3. normalization
+  # 4. color space conversion to hls
+  # 5. Image gradient, sobel x
+  # 6. Random left-right flip
+  ############################
+  
+  # cropping bottom 25px and top 65px 
+  # examined pixs to exclude bonet area on the bottom and non-road area on the top
+  cropped_img = center_image[25:94, :]
+  # center (=mean to zero)
+  # nomalization
+  # convert to HLS color space and separate the L & S channel
+  hls_img = cv2.cvtColor(cropped_img, cv2.COLOR_RGB2HLS)
+  l_channel = hls_img[:,:,1]
+  s_channel = hls_img[:,:,2]
+  # sobel x
+  #   > take the derivative in x
+  sobelx = cv2.Sobel(l_channel, cv2.CV_64F, 1, 0)
+  #   > absolute x derivatitve to accentuate lines away from horizontal
+  abs_sobelx = np.absolute(sobelx)
+  scaled_sobel = np.uint8(255*abs_sobelx/np.max(abs_sobelx))
+  # threshold x gradient
+  sxbinary = np.zeros_like(scaled_sobel)
+  sxbinary[(scaled_sobel >= sx_thresh[0]) & (scaled_sobel <= s_thresh[1])] = 1
+  # threshold color channel
+  s_binary = np.zeros_like(s_channel)
+  s_binary[(s_channel > = s_thresh[0]) & (s_channel <= s_thresh[1])] = 1
+  # > stack each channel to view their individual conttribution in green and blue respectively.
+  # > this returns a stack of the two bianry images, whose components you can see as different colors.
+  color_binary = np.dstack((np.zeros_like(sxbinary), sxbinary, s_binary)) * 255
+  # combine the two binary thresholds
+  combined_binary = np.zeros_like(sxbinary)
+  combined_binary[(s_binary==1) | (sxbinary==1)] = 1
+  
+  return color_binary, combined_binary
+
 batch_size = 32
+correction = 0.25 # to be tuned
 
 def generator(samples, batch_size=batch_size):
   num_samples = len(samples)
@@ -38,20 +88,24 @@ def generator(samples, batch_size=batch_size):
       angles = []
       for batch_sample in batch_samples:
         path = './IMG/'
+        # center image
         center_image = cv2.imread(path + batch_sample[0].split('/')[-1])
         center_angle = float(batch_sample[3])
-        images.append(center_image)
+        center_color_bin, center_combined_bin = binary_img(center_image)
+        images.append(center_combined_bin)
         angles.append(center_angle)
-        ############################
-        # Image preprocessing
-        # : similar to line detection
-        # : cropping could be done here
-        # 1. grayscale
-        # 2. center (=mean to zero)
-        # 3. Normalization
-        # 4. Image gradient, sobel x
-        # 5. Random left-right flip
-        ############################
+        # left image
+        left_image = cv2.imread(path + batch_sample[1].split('/')[-1])
+        left_angle = float(batch_sample[3]) - correction
+        left_color_bin, left_combined_bin = binary_img(left_image)
+        images.append(left_combined_bin)
+        angles.append(left_angle)
+        # right image
+        right_image = cv2.imread(path + batch_sample[2].split('/')[-1])
+        right_angle = float(batch_sample[3]) + correction
+        right_color_bin, right_combined_bin = binary_img(right_image)
+        images.append(right_combined_bin)
+        angles.append(right_angle)
       
       # Trim image to only see section with road
       X_train = np.array(images)
@@ -75,12 +129,12 @@ from keras.layers.convolutional import Conv2D
 import tensorflow as tf
 
 # Trimmed image format
-ch, row, col = 3, 66, 200
+ch, row, col = 3, 90, 320
 
 model = Sequential()
-model.add(Cropping2D(cropping2D((50,20),(0,0)), input_shape=(ch, row, col), output_shape=(ch, row, col)))
+#model.add(Cropping2D(cropping2D((65,25),(0,0)), input_shape=(ch, row, col), output_shape=(ch, row, col)))
 # Convolutional layer: 5x5 kernel, 24@31x98
-model.add(Conv2D(24, 5, 5, strides=(2,2), padding='valid'))
+model.add(Conv2D(24, 5, 5, strides=(2,2), padding='valid', input_shape=(ch, row, col)))
 # Convolutional layer: 5x5 kernel, 36@14x47
 model.add(Conv2D(36, 5, 5, strides=(2,2), padding='valid'))
 # Convolutional layer: 5x5 kernel, 48@5x22
