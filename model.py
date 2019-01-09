@@ -8,14 +8,14 @@ import csv
 samples =[]
 validation_ratio = 0.2
 
-with open('./driving_log.csv') as csvfile:
+with open('../../../opt/carnd_p3/data/driving_log.csv') as csvfile:
   reader = csv.reader(csvfile)
   for line in reader:
     samples.append(line)
     
 from sklearn.model_selection import train_test_split
 
-train_sample, validation_sample = train_test_split(samples, test_size=validation_ratio)
+train_samples, validation_samples = train_test_split(samples, test_size=validation_ratio)
 
 '''
 Analyse the data, especially for distribution of angles
@@ -64,7 +64,7 @@ def binary_img(img, s_thresh=(170,255), sx_thresh=(20,100)):
   sxbinary[(scaled_sobel >= sx_thresh[0]) & (scaled_sobel <= s_thresh[1])] = 1
   # threshold color channel
   s_binary = np.zeros_like(s_channel)
-  s_binary[(s_channel > = s_thresh[0]) & (s_channel <= s_thresh[1])] = 1
+  s_binary[(s_channel >= s_thresh[0]) & (s_channel <= s_thresh[1])] = 1
   # > stack each channel to view their individual conttribution in green and blue respectively.
   # > this returns a stack of the two bianry images, whose components you can see as different colors.
   color_binary = np.dstack((np.zeros_like(sxbinary), sxbinary, s_binary)) * 255
@@ -87,7 +87,7 @@ def generator(samples, batch_size=batch_size):
       images = []
       angles = []
       for batch_sample in batch_samples:
-        path = '~/opt/carnd_p3/data/IMG/'
+        path = '../../../opt/carnd_p3/data/IMG/'
         # center image
         center_image = cv2.imread(path + batch_sample[0].split('/')[-1])
         center_angle = float(batch_sample[3])
@@ -134,23 +134,23 @@ ch, row, col = 3, 90, 320
 model = Sequential()
 #model.add(Cropping2D(cropping2D((65,25),(0,0)), input_shape=(ch, row, col), output_shape=(ch, row, col)))
 # Convolutional layer: 5x5 kernel, 24@31x98
-model.add(Conv2D(24, 5, 5, strides=(2,2), padding='valid', input_shape=(ch, row, col)))
+model.add(Conv2D(24, (5, 5), strides=(2,2), padding='valid', input_shape=(ch, row, col)))
 # Convolutional layer: 5x5 kernel, 36@14x47
-model.add(Conv2D(36, 5, 5, strides=(2,2), padding='valid'))
+model.add(Conv2D(36, (5, 5), strides=(2,2), padding='valid'))
 # Convolutional layer: 5x5 kernel, 48@5x22
-model.add(Conv2D(48, 5, 5, strides=(2,2), padding='valid'))
+model.add(Conv2D(48, (5, 5), strides=(2,2), padding='valid'))
 # Convolutional layer: 3x3 kernel, 64@3x30
-model.add(Conv2D(64, 3, 3, padding='valid'))
+model.add(Conv2D(64, (3, 3), padding='valid'))
 # Convolutional layer: 3x3 kernel, 64@1x18
-model.add(Conv2D(64, 3, 3, padding='valid'))
+model.add(Conv2D(64, (3, 3), padding='valid'))
 # Flatten layer: 1164 neurons
 model.add(Flatten())
 # Fully connected layer: 100 neurons
-model.add(Dense(100, activation='tanh')
+model.add(Dense(100, activation='tanh'))
 # Fully connected layer: 50 neurons
-model.add(Dense(50, activation='tanh')
+model.add(Dense(50, activation='tanh'))
 # Fully connected layer: 10 neurons
-model.add(Dense(10, activation='tanh')
+model.add(Dense(10, activation='tanh'))
 # Fully connected output lyaer
 model.add(Dense(1))
 
