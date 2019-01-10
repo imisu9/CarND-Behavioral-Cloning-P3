@@ -8,7 +8,7 @@ import csv
 samples =[]
 validation_ratio = 0.2
 
-with open('../../../opt/carnd_p3/data/driving_log.csv') as csvfile:
+with open('/opt/carnd_p3/data/driving_log.csv') as csvfile:
   reader = csv.reader(csvfile)
   for line in reader:
     samples.append(line)
@@ -46,7 +46,7 @@ def binary_img(img, s_thresh=(170,255), sx_thresh=(20,100)):
   
   # cropping bottom 25px and top 65px 
   # examined pixs to exclude bonet area on the bottom and non-road area on the top
-  cropped_img = center_image[25:94, :]
+  cropped_img = img[25:95,:]
   # center (=mean to zero)
   # nomalization
   # convert to HLS color space and separate the L & S channel
@@ -77,6 +77,8 @@ def binary_img(img, s_thresh=(170,255), sx_thresh=(20,100)):
 batch_size = 32
 correction = 0.25 # to be tuned
 
+from sklearn.utils import shuffle
+
 def generator(samples, batch_size=batch_size):
   num_samples = len(samples)
   while 1:  # Loop forever so the generator never terminates
@@ -87,7 +89,7 @@ def generator(samples, batch_size=batch_size):
       images = []
       angles = []
       for batch_sample in batch_samples:
-        path = '../../../opt/carnd_p3/data/IMG/'
+        path = '/opt/carnd_p3/data/IMG/'
         # center image
         center_image = cv2.imread(path + batch_sample[0].split('/')[-1])
         center_angle = float(batch_sample[3])
@@ -110,7 +112,7 @@ def generator(samples, batch_size=batch_size):
       # Trim image to only see section with road
       X_train = np.array(images)
       y_train = np.array(angles)
-      yield sklearn.utils.shuffle(X_train, y_train)
+      yield shuffle(X_train, y_train)
       
 # Complie and train the model using the generator function
 train_generator = generator(train_samples, batch_size=batch_size)
@@ -129,20 +131,20 @@ from keras.layers.convolutional import Conv2D
 import tensorflow as tf
 
 # Trimmed image format
-ch, row, col = 3, 90, 320
+row, col, ch = 70, 320, 3
 
 model = Sequential()
 #model.add(Cropping2D(cropping2D((65,25),(0,0)), input_shape=(ch, row, col), output_shape=(ch, row, col)))
 # Convolutional layer: 5x5 kernel, 24@31x98
-model.add(Conv2D(24, (5, 5), strides=(2,2), padding='valid', input_shape=(ch, row, col)))
+model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid', input_shape=(row, col, ch)))
 # Convolutional layer: 5x5 kernel, 36@14x47
-model.add(Conv2D(36, (5, 5), strides=(2,2), padding='valid'))
+model.add(Conv2D(36, (5,5), strides=(2,2), padding='valid'))
 # Convolutional layer: 5x5 kernel, 48@5x22
-model.add(Conv2D(48, (5, 5), strides=(2,2), padding='valid'))
+model.add(Conv2D(48, (5,5), strides=(2,2), padding='valid'))
 # Convolutional layer: 3x3 kernel, 64@3x30
-model.add(Conv2D(64, (3, 3), padding='valid'))
+model.add(Conv2D(64, (3,3), padding='valid'))
 # Convolutional layer: 3x3 kernel, 64@1x18
-model.add(Conv2D(64, (3, 3), padding='valid'))
+model.add(Conv2D(64, (3,3), padding='valid'))
 # Flatten layer: 1164 neurons
 model.add(Flatten())
 # Fully connected layer: 100 neurons
@@ -158,15 +160,20 @@ model.add(Dense(1))
 model.compile(optimizer='Adam', loss='categorical_crossentropy', metircs=['accuracy'])
 
 # Check the summary of this new model to confirm the architecture
-model.summary()
+from contextlib import redirect_stdout
+
+with open('./examples/modelsummary.txt', 'w') as f:
+    with redirect_stdout(f):
+        model.summary()
 
 from keras.utils import plot_model
 plot_model(model, to_file='./examples/model.png')
 
-checkpoint = ModelCheckpoint(filepath=save_path, monitor='val_loss', save_best_only=True)
+from keras.callbacks import ModelCheckpoint, EarlyStopping
+checkpoint = ModelCheckpoint(filepath='model.h5', monitor='val_loss', save_best_only=True)
 stopper = EarlyStopping(monitor='val_acc', min_delta=0.0003, patience=5)
 history = model.fit_generator(train_generator,
-                              steps_per_epoch=len(train_sample),
+                              steps_per_epoch=len(train_samples),
                               validation_data=validation_generator,
                               validation_steps=len(validation_samples),
                               epochs=10,
