@@ -200,7 +200,7 @@ plt.title('Model loss')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Test'], loc='upper left')
-plt.savefig('./examples/loss.png'
+plt.savefig('./examples/loss.png')
 plt.show()
 
 model.save('model.h5')
