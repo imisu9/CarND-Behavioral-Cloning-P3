@@ -12,6 +12,8 @@ with open('/opt/carnd_p3/data/driving_log.csv') as csvfile:
   reader = csv.reader(csvfile)
   for line in reader:
     samples.append(line)
+  # delete the first line since it contains headers like 'center', 'left', etc.
+  samples = samples[1:]
     
 from sklearn.model_selection import train_test_split
 
@@ -72,10 +74,10 @@ def binary_img(img, s_thresh=(170,255), sx_thresh=(20,100)):
   combined_binary = np.zeros_like(sxbinary)
   combined_binary[(s_binary==1) | (sxbinary==1)] = 1
   
-  return color_binary, combined_binary
+  return np.expand_dims(color_binary, axis=2), np.expand_dims(combined_binary, axis=2)
 
 batch_size = 32
-correction = 0.25 # to be tuned
+correction = 0.2 # to be tuned
 
 from sklearn.utils import shuffle
 
@@ -98,13 +100,13 @@ def generator(samples, batch_size=batch_size):
         angles.append(center_angle)
         # left image
         left_image = cv2.imread(path + batch_sample[1].split('/')[-1])
-        left_angle = float(batch_sample[3]) - correction
+        left_angle = float(batch_sample[3]) + correction
         left_color_bin, left_combined_bin = binary_img(left_image)
         images.append(left_combined_bin)
         angles.append(left_angle)
         # right image
         right_image = cv2.imread(path + batch_sample[2].split('/')[-1])
-        right_angle = float(batch_sample[3]) + correction
+        right_angle = float(batch_sample[3]) - correction
         right_color_bin, right_combined_bin = binary_img(right_image)
         images.append(right_combined_bin)
         angles.append(right_angle)
@@ -131,10 +133,9 @@ from keras.layers.convolutional import Conv2D
 import tensorflow as tf
 
 # Trimmed image format
-row, col, ch = 70, 320, 3
+row, col, ch = 70, 320, 1
 
 model = Sequential()
-#model.add(Cropping2D(cropping2D((65,25),(0,0)), input_shape=(ch, row, col), output_shape=(ch, row, col)))
 # Convolutional layer: 5x5 kernel, 24@31x98
 model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid', input_shape=(row, col, ch)))
 # Convolutional layer: 5x5 kernel, 36@14x47
@@ -157,7 +158,7 @@ model.add(Dense(10, activation='tanh'))
 model.add(Dense(1))
 
 # Complie the model
-model.compile(optimizer='Adam', loss='categorical_crossentropy', metircs=['accuracy'])
+model.compile(optimizer='Adam', loss='mean_squared_error', metrics=['accuracy'])
 
 # Check the summary of this new model to confirm the architecture
 from contextlib import redirect_stdout
@@ -189,6 +190,7 @@ plt.title('Model accuracy')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Test'], loc='upper left')
+plt.savefig('./examples/accuracy.png')
 plt.show()
 
 # Plot training & validation loss values
@@ -198,6 +200,7 @@ plt.title('Model loss')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Test'], loc='upper left')
+plt.savefig('./examples/loss.png'
 plt.show()
 
 model.save('model.h5')
