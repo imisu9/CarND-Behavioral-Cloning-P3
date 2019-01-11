@@ -191,7 +191,7 @@ plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Test'], loc='upper left')
 plt.savefig('./examples/accuracy.png')
-plt.show()
+#plt.show()
 
 # Plot training & validation loss values
 plt.plot(history.history['loss'])
@@ -201,6 +201,6 @@ plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Test'], loc='upper left')
 plt.savefig('./examples/loss.png')
-plt.show()
+#plt.show()
 
 model.save('model.h5')
