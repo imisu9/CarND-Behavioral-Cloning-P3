@@ -56,7 +56,20 @@ train_samples, validation_samples = train_test_split(samples, test_size=validati
 # Check angle distribution on train_samples and validation_samples
 angle_distribution(train_samples, './examples/init_train_angle_dist.png')
 angle_distribution(validation_samples, './examples/init_valid_angle_dist.png')
-
+'''
+# Scale data: zero mean and unit variance
+from sklearn import preprocessing
+import numpy as np
+train_samples = np.array(train_samples)
+train_samples[:,3] = preprocessing.scale(train_samples[:,3])
+train_samples = train_samples.tolist()
+validation_samples = np.array(validation_samples)
+validation_samples[:,3] = preprocessing.scale(validation_samples[:,3])
+validation_samples = validation_samples.tolist()
+# Check angle distribution on train_samples and validation_samples
+angle_distribution(train_samples, './examples/scaled_train_angle_dist.png')
+angle_distribution(validation_samples, './examples/scaled_valid_angle_dist.png')
+'''
 '''
 Define 'generator' function
 '''
@@ -149,6 +162,8 @@ def generator(samples, batch_size=batch_size):
         angles.append(right_angle)
       
       X_train = np.array(images)
+      # Check angle distribution on train_samples and validation_samples
+      #angle_distribution(batch_samples, './examples/batch'+str(offset)+'_angle_dist.png')
       y_train = np.array(angles)      
       yield shuffle(X_train, y_train)
       
@@ -175,6 +190,7 @@ model = Sequential()
 # Preprocess imcoming data, centered around zero with small standard deviation
 model.add(Lambda(lambda x: (x/255.0)-0.5, input_shape=(row, col, ch), output_shape=(row, col, ch)))
 # Convolutional layer: 5x5 kernel, 24@31x98
+#model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid', input_shape=(row, col, ch)))
 model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid'))
 # Convolutional layer: 5x5 kernel, 36@14x47
 model.add(Conv2D(36, (5,5), strides=(2,2), padding='valid'))
@@ -215,7 +231,7 @@ history = model.fit_generator(train_generator,
                               steps_per_epoch=len(train_samples),
                               validation_data=validation_generator,
                               validation_steps=len(validation_samples),
-                              epochs=1,
+                              epochs=5,
                               verbose=1,
                               callbacks=[checkpoint, stopper])
 
