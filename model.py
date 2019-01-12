@@ -198,6 +198,7 @@ from keras.layers import Input, Lambda
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Activation, Flatten
 from keras.layers.convolutional import Conv2D
+from keras import optimizers
 import tensorflow as tf
 
 # Trimmed image format
@@ -229,7 +230,8 @@ model.add(Dense(10, activation='tanh'))
 model.add(Dense(1))
 
 # Complie the model
-model.compile(optimizer='Adam', loss='mean_squared_error', metrics=['accuracy'])
+adam = optimizers.Adam(lr=0.01)
+model.compile(optimizer=adam, loss='mean_squared_error', metrics=['accuracy'])
 
 # Check the summary of this new model to confirm the architecture
 from contextlib import redirect_stdout
