@@ -43,15 +43,22 @@ Read in input files
 
 import os
 import csv
+import numpy as np
 
 samples =[]
 
 with open('/opt/carnd_p3/data/driving_log.csv') as csvfile:
-  reader = csv.reader(csvfile)
-  for line in reader:
-    samples.append(line)
-  # delete the first line since it contains headers like 'center', 'left', etc.
-  samples = samples[1:]
+    reader = csv.reader(csvfile)
+    for line in reader:
+        # if the steering==0, include only 1/3 of them.
+        # it will weaken exaggerated center-bias
+        if np.array(line)[3]==0:
+            if np.random.randint(3)==1:
+                samples.append(line)
+        else:
+            samples.append(line)
+    # delete the first line since it contains headers like 'center', 'left', etc.
+    samples = samples[1:]
     
 from sklearn.model_selection import train_test_split
 
@@ -137,7 +144,7 @@ def preprocessing(path, angle):
   return combined_bin, angle
 
 batch_size = 32
-correction = 0.2 # to be tuned
+correction = 0.25 # to be tuned
 
 from sklearn.utils import shuffle
 
@@ -209,15 +216,15 @@ model = Sequential()
 model.add(Lambda(lambda x: (x/255.0)-0.5, input_shape=(row, col, ch), output_shape=(row, col, ch)))
 # Convolutional layer: 5x5 kernel, 24@31x98
 #model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid', input_shape=(row, col, ch)))
-model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid', activation='tanh'))
+model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid'))
 # Convolutional layer: 5x5 kernel, 36@14x47
-model.add(Conv2D(36, (5,5), strides=(2,2), padding='valid', activation='tanh'))
+model.add(Conv2D(36, (5,5), strides=(2,2), padding='valid'))
 # Convolutional layer: 5x5 kernel, 48@5x22
-model.add(Conv2D(48, (5,5), strides=(2,2), padding='valid', activation='tanh'))
+model.add(Conv2D(48, (5,5), strides=(2,2), padding='valid'))
 # Convolutional layer: 3x3 kernel, 64@3x30
-model.add(Conv2D(64, (3,3), padding='valid', activation='tanh'))
+model.add(Conv2D(64, (3,3), padding='valid'))
 # Convolutional layer: 3x3 kernel, 64@1x18
-model.add(Conv2D(64, (3,3), padding='valid', activation='tanh'))
+model.add(Conv2D(64, (3,3), padding='valid'))
 # Flatten layer: 1164 neurons
 model.add(Flatten())
 # Fully connected layer: 100 neurons
