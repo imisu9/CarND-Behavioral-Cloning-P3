@@ -1,30 +1,36 @@
 '''
-Distribution function for angles
+Distribution function for angles,
+to analyse the data, especially for distribution of angles.
+If needed, perform regularization and normalization on samples distribution
 '''
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 
-def angle_distribution(samples, file_path):
-  
-  num_bins = 50
-  x = np.array(samples[3])
-  
-  fig, ax = plt.subplots()
-  
-  # the histogram of the data
-  n, bins, patches = ax.hist(x, num_bins, normed=1)
-  
-  # add a 'best fit' line
-  y = mlab.normpdf(bins, mu, sigma)
-  ax.plot(bins, y, '--')
-  ax.set_xlabel('Angles')
-  ax.set_ylabel('Frequency')
-  ax.set_title('Histogram of Steering Angle')
-  
-  # tweak spacing to prevent clipping of ylabel
-  fig.tight_layout()
-  plt.savefig(file_path)
-  #plt.show()
+def angle_distribution(angles, file_path):
+    
+    num_bins = 50
+    x = np.array(angles)
+    x = x[:, 3]
+    x = x.astype(np.float)
+    mu = np.mean(x)
+    sigma = np.std(x)
+    
+    fig, ax = plt.subplots()
+    
+    # the histogram of the data
+    n, bins, patches = ax.hist(x, num_bins, normed=1)
+    # add a 'best fit' line
+    y = mlab.normpdf(bins, mu, sigma)
+    ax.plot(bins, y, '--')
+    ax.set_xlabel('Angles')
+    ax.set_ylabel('Frequency')
+    ax.set_title('Histogram of Steering Angle')
+    
+    # tweak spacing to prevent clipping of ylabel
+    fig.tight_layout()
+    plt.savefig(file_path)
+    #plt.show()
 
 '''
 Read in input files
@@ -34,7 +40,6 @@ import os
 import csv
 
 samples =[]
-validation_ratio = 0.2
 
 with open('/opt/carnd_p3/data/driving_log.csv') as csvfile:
   reader = csv.reader(csvfile)
@@ -45,13 +50,12 @@ with open('/opt/carnd_p3/data/driving_log.csv') as csvfile:
     
 from sklearn.model_selection import train_test_split
 
+validation_ratio = 0.2
 train_samples, validation_samples = train_test_split(samples, test_size=validation_ratio)
 
-'''
-Analyse the data, especially for distribution of angles
-If needed, perform regularization and normalization on samples distribution
-'''
-
+# Check angle distribution on train_samples and validation_samples
+angle_distribution(train_samples, './examples/init_train_angle_dist.png')
+angle_distribution(validation_samples, './examples/init_valid_angle_dist.png')
 
 '''
 Define 'generator' function
@@ -109,10 +113,10 @@ def preprocessing(path, angle):
   color_bin, combined_bin = binary_img(cropped_img)
   # randomly flip left-right
   if np.random.randint(2) == 0:
-    img = np.fliplr(img)
+    combined_bin = np.fliplr(combined_bin)
     angle = -angle
   
-  return img, angle
+  return combined_bin, angle
 
 batch_size = 32
 correction = 0.2 # to be tuned
@@ -144,9 +148,9 @@ def generator(samples, batch_size=batch_size):
         images.append(right_image)
         angles.append(right_angle)
       
-      # Trim image to only see section with road
+      
       X_train = np.array(images)
-      y_train = np.array(angles)
+      y_train = np.array(angles)      
       yield shuffle(X_train, y_train)
       
 # Complie and train the model using the generator function
@@ -212,7 +216,7 @@ history = model.fit_generator(train_generator,
                               steps_per_epoch=len(train_samples),
                               validation_data=validation_generator,
                               validation_steps=len(validation_samples),
-                              epochs=5,
+                              epochs=1,
                               verbose=1,
                               callbacks=[checkpoint, stopper])
 
