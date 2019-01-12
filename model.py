@@ -148,19 +148,21 @@ def generator(samples, batch_size=batch_size):
       path = '/opt/carnd_p3/data/IMG/'
       
       for batch_sample in batch_samples:
-        # center image
-        center_image, center_angle = preprocessing(path + batch_sample[0].split('/')[-1], float(batch_sample[3]))
-        images.append(center_image)
-        angles.append(center_angle)
-        # left image
-        left_image, left_angle = preprocessing(path + batch_sample[1].split('/')[-1], float(batch_sample[3])+correction)
-        images.append(left_image)
-        angles.append(left_angle)
-        # right image
-        right_image, right_angle = preprocessing(path + batch_sample[2].split('/')[-1], float(batch_sample[3])-correction)
-        images.append(right_image)
-        angles.append(right_angle)
-      
+        # take random choice among center, left and right image
+        # 0 = center, 1 = left, 2 = right
+        choice = np.random.randint(3)
+        if choice == 0:
+            # center image
+            image, angle = preprocessing(path + batch_sample[0].split('/')[-1], float(batch_sample[3]))
+        elif choice == 1:
+            # left image
+            image, angle = preprocessing(path + batch_sample[1].split('/')[-1], float(batch_sample[3])+correction)
+        elif choice == 2:
+            # right image
+            image, angle = preprocessing(path + batch_sample[2].split('/')[-1], float(batch_sample[3])-correction)
+        images.append(image)
+        angles.append(angle)
+        
       X_train = np.array(images)
       # Check angle distribution on train_samples and validation_samples
       #angle_distribution(batch_samples, './examples/batch'+str(offset)+'_angle_dist.png')
