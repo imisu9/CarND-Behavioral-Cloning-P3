@@ -10,6 +10,7 @@ import matplotlib.mlab as mlab
 def angle_distribution(angles, file_path):
     
     num_bins = 50
+    
     x = np.array(angles)
     x = x[:, 3]
     x = x.astype(np.float)
@@ -165,7 +166,7 @@ def generator(samples, batch_size=batch_size):
         
       X_train = np.array(images)
       # Check angle distribution on train_samples and validation_samples
-      #angle_distribution(batch_samples, './examples/batch'+str(offset)+'_angle_dist.png')
+      #angle_distribution(angles, './examples/batch_angle_dist.png')
       y_train = np.array(angles)      
       yield shuffle(X_train, y_train)
       
