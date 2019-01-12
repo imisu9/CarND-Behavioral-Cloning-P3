@@ -208,15 +208,15 @@ model = Sequential()
 model.add(Lambda(lambda x: (x/255.0)-0.5, input_shape=(row, col, ch), output_shape=(row, col, ch)))
 # Convolutional layer: 5x5 kernel, 24@31x98
 #model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid', input_shape=(row, col, ch)))
-model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid'))
+model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid', activation='tanh'))
 # Convolutional layer: 5x5 kernel, 36@14x47
-model.add(Conv2D(36, (5,5), strides=(2,2), padding='valid'))
+model.add(Conv2D(36, (5,5), strides=(2,2), padding='valid', activation='tanh'))
 # Convolutional layer: 5x5 kernel, 48@5x22
-model.add(Conv2D(48, (5,5), strides=(2,2), padding='valid'))
+model.add(Conv2D(48, (5,5), strides=(2,2), padding='valid', activation='tanh'))
 # Convolutional layer: 3x3 kernel, 64@3x30
-model.add(Conv2D(64, (3,3), padding='valid'))
+model.add(Conv2D(64, (3,3), padding='valid', activation='tanh'))
 # Convolutional layer: 3x3 kernel, 64@1x18
-model.add(Conv2D(64, (3,3), padding='valid'))
+model.add(Conv2D(64, (3,3), padding='valid', activation='tanh'))
 # Flatten layer: 1164 neurons
 model.add(Flatten())
 # Fully connected layer: 100 neurons
@@ -243,12 +243,12 @@ plot_model(model, to_file='./examples/model.png')
 
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 checkpoint = ModelCheckpoint(filepath='model.h5', monitor='val_loss', save_best_only=True)
-stopper = EarlyStopping(monitor='val_acc', min_delta=0.0003, patience=5)
+stopper = EarlyStopping(monitor='val_acc', min_delta=0.003, patience=3)
 history = model.fit_generator(train_generator,
                               steps_per_epoch=len(train_samples),
                               validation_data=validation_generator,
                               validation_steps=len(validation_samples),
-                              epochs=10,
+                              epochs=5,
                               verbose=1,
                               callbacks=[checkpoint, stopper])
 
