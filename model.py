@@ -1,4 +1,32 @@
 '''
+Distribution function for angles
+'''
+import matplotlib.pyplot as plt
+import matplotlib.mlab as mlab
+
+def angle_distribution(samples, file_path):
+  
+  num_bins = 50
+  x = np.array(samples[3])
+  
+  fig, ax = plt.subplots()
+  
+  # the histogram of the data
+  n, bins, patches = ax.hist(x, num_bins, normed=1)
+  
+  # add a 'best fit' line
+  y = mlab.normpdf(bins, mu, sigma)
+  ax.plot(bins, y, '--')
+  ax.set_xlabel('Angles')
+  ax.set_ylabel('Frequency')
+  ax.set_title('Histogram of Steering Angle')
+  
+  # tweak spacing to prevent clipping of ylabel
+  fig.tight_layout()
+  plt.savefig(file_path)
+  #plt.show()
+
+'''
 Read in input files
 '''
 
@@ -34,25 +62,9 @@ import numpy as np
 import sklearn
 
 def binary_img(img, s_thresh=(170,255), sx_thresh=(20,100)):
-  ############################
-  # Image preprocessing
-  # : similar to advanced line detection
-  # : cropping could be done here
-  # 1. cropping
-  # 2. center (=mean to zero)
-  # 3. normalization
-  # 4. color space conversion to hls
-  # 5. Image gradient, sobel x
-  # 6. Random left-right flip
-  ############################
   
-  # cropping bottom 25px and top 65px 
-  # examined pixs to exclude bonet area on the bottom and non-road area on the top
-  cropped_img = img[25:95,:]
-  # center (=mean to zero)
-  # nomalization
   # convert to HLS color space and separate the L & S channel
-  hls_img = cv2.cvtColor(cropped_img, cv2.COLOR_RGB2HLS)
+  hls_img = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
   l_channel = hls_img[:,:,1]
   s_channel = hls_img[:,:,2]
   # sobel x
@@ -76,6 +88,32 @@ def binary_img(img, s_thresh=(170,255), sx_thresh=(20,100)):
   
   return np.expand_dims(color_binary, axis=2), np.expand_dims(combined_binary, axis=2)
 
+def preprocessing(path, angle):
+  ############################
+  # Image preprocessing
+  # : similar to advanced line detection
+  # : cropping could be done here
+  # 1. cropping
+  # 2. color space conversion to hls
+  # 3. image gradient, sobel x
+  ############################
+  
+  # load data
+  img = cv2.imread(path)
+  # cropping bottom 25px and top 65px 
+  # examined pixs to exclude bonet area on the bottom and non-road area on the top
+  cropped_img = img[25:95,:]
+  # call binary_img()
+  # > color space conversion to hls
+  # > image gradient, sobelx
+  color_bin, combined_bin = binary_img(cropped_img)
+  # randomly flip left-right
+  if np.random.randint(2) == 0:
+    img = np.fliplr(img)
+    angle = -angle
+  
+  return img, angle
+
 batch_size = 32
 correction = 0.2 # to be tuned
 
@@ -90,25 +128,20 @@ def generator(samples, batch_size=batch_size):
       
       images = []
       angles = []
+      path = '/opt/carnd_p3/data/IMG/'
+      
       for batch_sample in batch_samples:
-        path = '/opt/carnd_p3/data/IMG/'
         # center image
-        center_image = cv2.imread(path + batch_sample[0].split('/')[-1])
-        center_angle = float(batch_sample[3])
-        center_color_bin, center_combined_bin = binary_img(center_image)
-        images.append(center_combined_bin)
+        center_image, center_angle = preprocessing(path + batch_sample[0].split('/')[-1], float(batch_sample[3]))
+        images.append(center_image)
         angles.append(center_angle)
         # left image
-        left_image = cv2.imread(path + batch_sample[1].split('/')[-1])
-        left_angle = float(batch_sample[3]) + correction
-        left_color_bin, left_combined_bin = binary_img(left_image)
-        images.append(left_combined_bin)
+        left_image, left_angle = preprocessing(path + batch_sample[1].split('/')[-1], float(batch_sample[3])+correction)
+        images.append(left_image)
         angles.append(left_angle)
         # right image
-        right_image = cv2.imread(path + batch_sample[2].split('/')[-1])
-        right_angle = float(batch_sample[3]) - correction
-        right_color_bin, right_combined_bin = binary_img(right_image)
-        images.append(right_combined_bin)
+        right_image, right_angle = preprocessing(path + batch_sample[2].split('/')[-1], float(batch_sample[3])-correction)
+        images.append(right_image)
         angles.append(right_angle)
       
       # Trim image to only see section with road
@@ -136,8 +169,10 @@ import tensorflow as tf
 row, col, ch = 70, 320, 1
 
 model = Sequential()
+# Preprocess imcoming data, centered around zero with small standard deviation
+model.add(Lambda(lambda x: (x/255.0)-0.5, input_shape=(row, col, ch), output_shape=(row, col, ch)))
 # Convolutional layer: 5x5 kernel, 24@31x98
-model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid', input_shape=(row, col, ch)))
+model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid'))
 # Convolutional layer: 5x5 kernel, 36@14x47
 model.add(Conv2D(36, (5,5), strides=(2,2), padding='valid'))
 # Convolutional layer: 5x5 kernel, 48@5x22
@@ -177,7 +212,7 @@ history = model.fit_generator(train_generator,
                               steps_per_epoch=len(train_samples),
                               validation_data=validation_generator,
                               validation_steps=len(validation_samples),
-                              epochs=10,
+                              epochs=5,
                               verbose=1,
                               callbacks=[checkpoint, stopper])
 
