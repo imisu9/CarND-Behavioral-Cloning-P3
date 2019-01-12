@@ -268,7 +268,7 @@ plt.cla()
 
 # Plot training & validation loss values
 plt.subplots()
-plt.plot(history.history['loss']
+plt.plot(history.history['loss'])
 plt.plot(history.history['val_loss'])
 plt.title('Model loss')
 plt.ylabel('Loss')
