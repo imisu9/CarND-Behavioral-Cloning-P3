@@ -61,7 +61,7 @@ train_samples, validation_samples = train_test_split(samples, test_size=validati
 # Check angle distribution on train_samples and validation_samples
 angle_distribution(train_samples, './examples/init_train_angle_dist.png')
 angle_distribution(validation_samples, './examples/init_valid_angle_dist.png')
-'''
+
 # Scale data: zero mean and unit variance
 from sklearn import preprocessing
 import numpy as np
@@ -71,10 +71,7 @@ train_samples = train_samples.tolist()
 validation_samples = np.array(validation_samples)
 validation_samples[:,3] = preprocessing.scale(validation_samples[:,3])
 validation_samples = validation_samples.tolist()
-# Check angle distribution on train_samples and validation_samples
-angle_distribution(train_samples, './examples/scaled_train_angle_dist.png')
-angle_distribution(validation_samples, './examples/scaled_valid_angle_dist.png')
-'''
+
 '''
 Define 'generator' function
 '''
@@ -205,10 +202,10 @@ row, col, ch = 70, 320, 1
 
 model = Sequential()
 # Preprocess imcoming data, centered around zero with small standard deviation
-model.add(Lambda(lambda x: (x/255.0)-0.5, input_shape=(row, col, ch), output_shape=(row, col, ch)))
+#model.add(Lambda(lambda x: (x/255.0)-0.5, input_shape=(row, col, ch), output_shape=(row, col, ch)))
 # Convolutional layer: 5x5 kernel, 24@31x98
-#model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid', input_shape=(row, col, ch)))
-model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid', activation='tanh'))
+model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid', input_shape=(row, col, ch)))
+#model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid', activation='tanh'))
 # Convolutional layer: 5x5 kernel, 36@14x47
 model.add(Conv2D(36, (5,5), strides=(2,2), padding='valid', activation='tanh'))
 # Convolutional layer: 5x5 kernel, 48@5x22
