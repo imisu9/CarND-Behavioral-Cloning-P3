@@ -148,7 +148,6 @@ def generator(samples, batch_size=batch_size):
         images.append(right_image)
         angles.append(right_angle)
       
-      
       X_train = np.array(images)
       y_train = np.array(angles)      
       yield shuffle(X_train, y_train)
