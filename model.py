@@ -35,6 +35,7 @@ def angle_distribution(angles, file_path):
     fig.tight_layout()
     plt.savefig(file_path)
     #plt.show()
+    plt.cla()
 
 '''
 Read in input files
@@ -247,7 +248,7 @@ history = model.fit_generator(train_generator,
                               steps_per_epoch=len(train_samples),
                               validation_data=validation_generator,
                               validation_steps=len(validation_samples),
-                              epochs=1,
+                              epochs=10,
                               verbose=1,
                               callbacks=[checkpoint, stopper])
 
@@ -263,18 +264,18 @@ plt.xlabel('Epoch')
 plt.legend(['Train', 'Test'], loc='upper left')
 plt.savefig('./examples/accuracy.png')
 #plt.show()
-'''
+plt.cla()
+
 # Plot training & validation loss values
-fig, ax = plt.subplots()
-ax.plot(history.history['loss']
-ax.plot(history.history['val_loss'])
-ax.set_title('Model loss')
-ax.set_ylabel('Loss')
-ax.set_xlabel('Epoch')
-ax.set_legend(['Train', 'Test'], loc='upper left')
-# tweak spacing to prevent clipping of ylabel
-fig.tight_layout()
+plt.subplots()
+plt.plot(history.history['loss']
+plt.plot(history.history['val_loss'])
+plt.title('Model loss')
+plt.ylabel('Loss')
+plt.xlabel('Epoch')
+plt.legend(['Train', 'Test'], loc='upper left')
 plt.savefig('./examples/loss.png')
 #plt.show()
-'''
+plt.cla()
+
 model.save('model.h5')
