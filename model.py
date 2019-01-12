@@ -50,15 +50,16 @@ samples =[]
 with open('/opt/carnd_p3/data/driving_log.csv') as csvfile:
     reader = csv.reader(csvfile)
     for line in reader:
-        # if the steering==0, include only 1/3 of them.
+        # if the steering==0, include only 1/5 of them.
         # it will weaken exaggerated center-bias
-        if np.array(line)[3]==0:
-            if np.random.randint(3)==1:
+        if np.array(line)[3] == ' 0':
+            if np.random.randint(5) == 0:
                 samples.append(line)
         else:
             samples.append(line)
     # delete the first line since it contains headers like 'center', 'left', etc.
     samples = samples[1:]
+    print(len(samples))
     
 from sklearn.model_selection import train_test_split
 
