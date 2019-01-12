@@ -10,9 +10,12 @@ import matplotlib.mlab as mlab
 def angle_distribution(angles, file_path):
     
     num_bins = 50
-    
-    x = np.array(angles)
-    x = x[:, 3]
+    if type(angles) is list:
+        x = np.array(angles)
+    else:
+        x = angles
+    if x.ndim != 1:
+        x = x[:, 3]
     x = x.astype(np.float)
     mu = np.mean(x)
     sigma = np.std(x)
@@ -174,6 +177,16 @@ def generator(samples, batch_size=batch_size):
 train_generator = generator(train_samples, batch_size=batch_size)
 validation_generator = generator(validation_samples, batch_size=batch_size)
 
+# Take batch_size = 2048 to analyze data distribution
+train_X_gen, train_y_gen = [], []
+val_X_gen, val_y_gen = [], []
+
+train_X_gen, train_y_gen = next(generator(train_samples, batch_size=2048))
+val_X_gen, val_y_gen = next(generator(validation_samples, batch_size=2048))
+
+angle_distribution(train_y_gen, './examples/final_train_angle_dist.png')
+angle_distribution(val_y_gen, './examples/final_valid_angle_dist.png')
+
 '''
 Employ NVIDIA CNN model described in End to End Learning for Self-Driving Cars
 
@@ -234,13 +247,14 @@ history = model.fit_generator(train_generator,
                               steps_per_epoch=len(train_samples),
                               validation_data=validation_generator,
                               validation_steps=len(validation_samples),
-                              epochs=5,
+                              epochs=1,
                               verbose=1,
                               callbacks=[checkpoint, stopper])
 
 import matplotlib.pyplot as plt
 
 # Plot training & validation accuracy values
+plt.subplots()
 plt.plot(history.history['acc'])
 plt.plot(history.history['val_acc'])
 plt.title('Model accuracy')
@@ -249,15 +263,18 @@ plt.xlabel('Epoch')
 plt.legend(['Train', 'Test'], loc='upper left')
 plt.savefig('./examples/accuracy.png')
 #plt.show()
-
+'''
 # Plot training & validation loss values
-plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
-plt.title('Model loss')
-plt.ylabel('Loss')
-plt.xlabel('Epoch')
-plt.legend(['Train', 'Test'], loc='upper left')
+fig, ax = plt.subplots()
+ax.plot(history.history['loss']
+ax.plot(history.history['val_loss'])
+ax.set_title('Model loss')
+ax.set_ylabel('Loss')
+ax.set_xlabel('Epoch')
+ax.set_legend(['Train', 'Test'], loc='upper left')
+# tweak spacing to prevent clipping of ylabel
+fig.tight_layout()
 plt.savefig('./examples/loss.png')
 #plt.show()
-
+'''
 model.save('model.h5')
