@@ -50,10 +50,10 @@ samples =[]
 with open('/opt/carnd_p3/data/driving_log.csv') as csvfile:
     reader = csv.reader(csvfile)
     for line in reader:
-        # if the steering==0, include only 1/5 of them.
+        # if the steering==0, include only 1/4 of them.
         # it will weaken exaggerated center-bias
         if np.array(line)[3] == ' 0':
-            if np.random.randint(5) == 0:
+            if np.random.randint(4) == 0:
                 samples.append(line)
         else:
             samples.append(line)
@@ -214,31 +214,39 @@ row, col, ch = 70, 320, 1
 
 model = Sequential()
 # Preprocess imcoming data, centered around zero with small standard deviation
-model.add(Lambda(lambda x: (x/255.0)-0.5, input_shape=(row, col, ch), output_shape=(row, col, ch)))
+#model.add(Lambda(lambda x: (x/127.5)-0.5, input_shape=(row, col, ch), output_shape=(row, col, ch)))
 # Convolutional layer: 5x5 kernel, 24@31x98
-#model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid', input_shape=(row, col, ch)))
-model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid'))
+model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid', input_shape=(row, col, ch)))
+#model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid'))
+model.add(Activation('elu'))
 # Convolutional layer: 5x5 kernel, 36@14x47
 model.add(Conv2D(36, (5,5), strides=(2,2), padding='valid'))
+model.add(Activation('elu'))
 # Convolutional layer: 5x5 kernel, 48@5x22
 model.add(Conv2D(48, (5,5), strides=(2,2), padding='valid'))
+model.add(Activation('elu'))
 # Convolutional layer: 3x3 kernel, 64@3x30
 model.add(Conv2D(64, (3,3), padding='valid'))
+model.add(Activation('elu'))
 # Convolutional layer: 3x3 kernel, 64@1x18
 model.add(Conv2D(64, (3,3), padding='valid'))
+model.add(Activation('elu'))
 # Flatten layer: 1164 neurons
 model.add(Flatten())
 # Fully connected layer: 100 neurons
-model.add(Dense(100, activation='tanh'))
+model.add(Dense(100))
+model.add(Activation('elu'))
 # Fully connected layer: 50 neurons
-model.add(Dense(50, activation='tanh'))
+model.add(Dense(50))
+model.add(Activation('elu'))
 # Fully connected layer: 10 neurons
-model.add(Dense(10, activation='tanh'))
+model.add(Dense(10))
+model.add(Activation('elu'))
 # Fully connected output lyaer
 model.add(Dense(1))
 
 # Complie the model
-adam = optimizers.Adam(lr=0.01)
+adam = optimizers.Adam(lr=1e-4)
 model.compile(optimizer=adam, loss='mean_squared_error', metrics=['accuracy'])
 
 # Check the summary of this new model to confirm the architecture
@@ -258,7 +266,7 @@ history = model.fit_generator(train_generator,
                               steps_per_epoch=len(train_samples),
                               validation_data=validation_generator,
                               validation_steps=len(validation_samples),
-                              epochs=5,
+                              epochs=1,
                               verbose=1,
                               callbacks=[checkpoint, stopper])
 
