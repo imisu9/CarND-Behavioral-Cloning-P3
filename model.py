@@ -70,20 +70,6 @@ train_samples, validation_samples = train_test_split(samples, test_size=validati
 angle_distribution(train_samples, './examples/init_train_angle_dist.png')
 angle_distribution(validation_samples, './examples/init_valid_angle_dist.png')
 '''
-# Scale data: zero mean and unit variance
-from sklearn import preprocessing
-import numpy as np
-train_samples = np.array(train_samples)
-train_samples[:,3] = preprocessing.scale(train_samples[:,3])
-train_samples = train_samples.tolist()
-validation_samples = np.array(validation_samples)
-validation_samples[:,3] = preprocessing.scale(validation_samples[:,3])
-validation_samples = validation_samples.tolist()
-# Check angle distribution on train_samples and validation_samples
-angle_distribution(train_samples, './examples/scaled_train_angle_dist.png')
-angle_distribution(validation_samples, './examples/scaled_valid_angle_dist.png')
-'''
-'''
 Define 'generator' function
 '''
 
