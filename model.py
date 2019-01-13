@@ -59,7 +59,7 @@ with open('/opt/carnd_p3/data/driving_log.csv') as csvfile:
             samples.append(line)
     # delete the first line since it contains headers like 'center', 'left', etc.
     samples = samples[1:]
-    print(len(samples))
+    #print(len(samples))
     
 from sklearn.model_selection import train_test_split
 
@@ -119,30 +119,35 @@ def binary_img(img, s_thresh=(170,255), sx_thresh=(20,100)):
   return np.expand_dims(color_binary, axis=2), np.expand_dims(combined_binary, axis=2)
 
 def preprocessing(path, angle):
-  ############################
-  # Image preprocessing
-  # : similar to advanced line detection
-  # : cropping could be done here
-  # 1. cropping
-  # 2. color space conversion to hls
-  # 3. image gradient, sobel x
-  ############################
-  
-  # load data
-  img = cv2.imread(path)
-  # cropping bottom 25px and top 65px 
-  # examined pixs to exclude bonet area on the bottom and non-road area on the top
-  cropped_img = img[25:95,:]
-  # call binary_img()
-  # > color space conversion to hls
-  # > image gradient, sobelx
-  color_bin, combined_bin = binary_img(cropped_img)
-  # randomly flip left-right
-  if np.random.randint(2) == 0:
-    combined_bin = np.fliplr(combined_bin)
-    angle = -angle
-  
-  return combined_bin, angle
+    ############################
+    # Image preprocessing
+    # : similar to advanced line detection
+    # : cropping could be done here
+    # 1. cropping
+    # 2. color space conversion to hls
+    # 3. image gradient, sobel x
+    ############################
+    
+    # load data
+    img = cv2.imread(path)
+    # cropping bottom 25px and top 65px
+    # examined pixs to exclude bonet area on the bottom and non-road area on the top
+    cropped_img = img[25:95,:]
+    # mean subtraction
+    mean_sub = cropped_img - np.mean(cropped_img)
+    # normalize
+    norm = mean_sub / np.std(mean_sub)
+    # call binary_img()
+    # > color space conversion to hls
+    # > image gradient, sobelx
+    #color_bin, combined_bin = binary_img(norm)
+    # randomly flip left-right
+    if np.random.randint(2) == 0:
+        #combined_bin = np.fliplr(combined_bin)
+        norm = np.fliplr(norm)
+        angle = -angle
+        
+    return norm, angle
 
 batch_size = 32
 correction = 0.25 # to be tuned
@@ -204,13 +209,13 @@ Model Architecture
 
 from keras.layers import Input, Lambda
 from keras.models import Sequential, Model
-from keras.layers.core import Dense, Activation, Flatten
+from keras.layers.core import Dense, Activation, Flatten, Dropout
 from keras.layers.convolutional import Conv2D
 from keras import optimizers
 import tensorflow as tf
 
 # Trimmed image format
-row, col, ch = 70, 320, 1
+row, col, ch = 70, 320, 3
 
 model = Sequential()
 # Preprocess imcoming data, centered around zero with small standard deviation
@@ -235,12 +240,15 @@ model.add(Activation('elu'))
 model.add(Flatten())
 # Fully connected layer: 100 neurons
 model.add(Dense(100))
+model.add(Dropout(.2))
 model.add(Activation('elu'))
 # Fully connected layer: 50 neurons
 model.add(Dense(50))
+model.add(Dropout(.5))
 model.add(Activation('elu'))
 # Fully connected layer: 10 neurons
 model.add(Dense(10))
+model.add(Dropout(.5))
 model.add(Activation('elu'))
 # Fully connected output lyaer
 model.add(Dense(1))
