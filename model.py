@@ -80,7 +80,7 @@ Define 'generator' function
 import cv2
 import numpy as np
 import sklearn
-
+'''
 def binary_img(img, s_thresh=(170,255), sx_thresh=(20,100)):
   
   # convert to HLS color space and separate the L & S channel
@@ -108,62 +108,98 @@ def binary_img(img, s_thresh=(170,255), sx_thresh=(20,100)):
   
   return np.expand_dims(color_binary, axis=2), np.expand_dims(combined_binary, axis=2)
 
-def load_data(path, batch_sample):
-    # take random choice among center, left and right camera image
-    # 0 = center, 1 = left, 2 = right
-    coef = [0, 1, -1]
-    correction = 0.25 # to be tuned
-    
-    choice = np.random.randint(3)
-    path = path + batch_sample[choice].split('/')[-1]
-    angle = float(batch_sample[3]) + (correction*coef[choice])
+def load_data(batch_sample):
+    path = '/opt/carnd_p3/data/IMG/'
+    correction = 0.2 # to be tuned
+    images = []
+    angles = []
     
     # load data
-    img = cv2.imread(path)
-    # randomly flip left-right
-    rand_flip = img
-    if np.random.randint(2) == 0:
-        rand_flip = np.fliplr(img)
-        angle = -angle
+    # center image
+    image = cv2.imread(path + batch_sample[0].split('/')[-1])
+    angle = float(batch_sample[3])
+    images.append(image)
+    angles.append(angle)
+    
+    # center image flipped
+    images.append(np.fliplr(image))
+    angles.append(-angle)
+    # left image
+    image = cv2.imread(path + batch_sample[1].split('/')[-1])
+    angle = float(batch_sample[3]) + correction
+    images.append(image)
+    angles.append(angle)
+    # left image flipped
+    images.append(np.fliplr(image))
+    angles.append(-angle)
+    # right image
+    image = cv2.imread(path + batch_sample[2].split('/')[-1])
+    angle = float(batch_sample[3]) - correction
+    images.append(image)
+    angles.append(angle)
+    # right image flipped
+    images.append(np.fliplr(image))
+    angles.append(-angle)
+    
     # cropping bottom 25px and top 65px
     # examined pixs to exclude bonet area on the bottom and non-road area on the top
     #cropped_img = img[25:95,:]
     # mean subtraction
-    mean_sub = rand_flip - np.mean(rand_flip)
+    #mean_sub = rand_flip - np.mean(rand_flip)
     # normalize after mean substraction
-    norm = mean_sub / np.std(mean_sub)
+    #norm = mean_sub / np.std(mean_sub)
     # call binary_img()
     # > color space conversion to hls
     # > image gradient, sobelx
     #color_bin, combined_bin = binary_img(norm)
         
-    return norm, angle
-
+    return images, angles
+'''
 batch_size = 32
 
 from sklearn.utils import shuffle
 
 def generator(samples, batch_size=batch_size):
-  num_samples = len(samples)
-  while 1:  # Loop forever so the generator never terminates
-    shuffle(samples)
-    for offset in range(0, num_samples, batch_size):
-      batch_samples = samples[offset:offset+batch_size]
-      
-      images = []
-      angles = []
-      path = '/opt/carnd_p3/data/IMG/'
-      
-      for batch_sample in batch_samples:
-        image, angle = load_data(path, batch_sample)
-        images.append(image)
-        angles.append(angle)
-        
-      X_train = np.array(images)
-      # Check angle distribution on train_samples and validation_samples
-      #angle_distribution(angles, './examples/batch_angle_dist.png')
-      y_train = np.array(angles)      
-      yield shuffle(X_train, y_train)
+    num_samples = len(samples)
+    while 1:  # Loop forever so the generator never terminates
+        shuffle(samples)
+        for offset in range(0, num_samples, batch_size):
+            batch_samples = samples[offset:offset+batch_size]
+            path = '/opt/carnd_p3/data/IMG/'
+            correction = 0.2 # to be tuned
+            images = []
+            angles = []
+            
+            for batch_sample in batch_samples:
+                # center image
+                image = cv2.imread(path + batch_sample[0].split('/')[-1])
+                angle = float(batch_sample[3])
+                images.append(image)
+                angles.append(angle)
+                
+                # center image flipped
+                images.append(np.fliplr(image))
+                angles.append(-angle)
+                # left image
+                image = cv2.imread(path + batch_sample[1].split('/')[-1])
+                angle = float(batch_sample[3]) + correction
+                images.append(image)
+                angles.append(angle)
+                # left image flipped
+                images.append(np.fliplr(image))
+                angles.append(-angle)
+                # right image
+                image = cv2.imread(path + batch_sample[2].split('/')[-1])
+                angle = float(batch_sample[3]) - correction
+                images.append(image)
+                angles.append(angle)
+                # right image flipped
+                images.append(np.fliplr(image))
+                angles.append(-angle)
+                
+            X_train = np.array(images)
+            y_train = np.array(angles)
+            yield shuffle(X_train, y_train)
       
 # Complie and train the model using the generator function
 train_generator = generator(train_samples, batch_size=batch_size)
@@ -197,29 +233,36 @@ row, col, ch = 160, 320, 3
 
 model = Sequential()
 # Preprocess imcoming data, centered around zero with small standard deviation
-model.add(Cropping2D(cropping=((65,25), (0,0)), input_shape=(row, col, ch)))
-#model.add(Lambda(lambda x: (x/255.0)-0.5))
+# mean subtraction and normalization
+model.add(Lambda(lambda x: (x/255.0)-0.5, input_shape=(row, col, ch)))
+# Cropping top 70 pix and bottom 25 pix
+model.add(Cropping2D(cropping=((70,25), (0,0))))
 # Convolutional layer: 5x5 kernel, 24@31x98
 #model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid', input_shape=(row, col, ch)))
 model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid'))
 model.add(Activation('elu'))
 model.add(BatchNormalization())
+model.add(Dropout(.5))
 # Convolutional layer: 5x5 kernel, 36@14x47
 model.add(Conv2D(36, (5,5), strides=(2,2), padding='valid'))
 model.add(Activation('elu'))
 model.add(BatchNormalization())
+model.add(Dropout(.5))
 # Convolutional layer: 5x5 kernel, 48@5x22
 model.add(Conv2D(48, (5,5), strides=(2,2), padding='valid'))
 model.add(Activation('elu'))
 model.add(BatchNormalization())
+model.add(Dropout(.5))
 # Convolutional layer: 3x3 kernel, 64@3x30
 model.add(Conv2D(64, (3,3), padding='valid'))
 model.add(Activation('elu'))
 model.add(BatchNormalization())
+model.add(Dropout(.5))
 # Convolutional layer: 3x3 kernel, 64@1x18
 model.add(Conv2D(64, (3,3), padding='valid'))
 model.add(Activation('elu'))
 model.add(BatchNormalization())
+model.add(Dropout(.5))
 # Flatten layer: 1164 neurons
 model.add(Flatten())
 # Fully connected layer: 100 neurons
