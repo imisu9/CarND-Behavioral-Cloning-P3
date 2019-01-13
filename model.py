@@ -112,7 +112,7 @@ def load_data(path, batch_sample):
     # take random choice among center, left and right camera image
     # 0 = center, 1 = left, 2 = right
     coef = [0, 1, -1]
-    correction = 0.2 # to be tuned
+    correction = 0.25 # to be tuned
     
     choice = np.random.randint(3)
     path = path + batch_sample[choice].split('/')[-1]
