@@ -302,10 +302,12 @@ plot_model(model, to_file='./examples/model.png')
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 checkpoint = ModelCheckpoint(filepath='model.h5', monitor='val_loss', save_best_only=True)
 stopper = EarlyStopping(monitor='val_acc', min_delta=0.003, patience=3)
+# steps_per_epoch and validation_step are multiplied by 6 
+# since generator added center/left/right and their flipped data on the fly
 history = model.fit_generator(train_generator,
-                              steps_per_epoch=len(train_samples),
+                              steps_per_epoch=int(len(train_samples)*6/batch_size),
                               validation_data=validation_generator,
-                              validation_steps=len(validation_samples),
+                              validation_steps=int(len(validation_samples)*6/batch_size),
                               epochs=5,
                               verbose=1,
                               callbacks=[checkpoint, stopper])
