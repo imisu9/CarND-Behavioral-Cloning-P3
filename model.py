@@ -266,7 +266,7 @@ history = model.fit_generator(train_generator,
                               steps_per_epoch=len(train_samples),
                               validation_data=validation_generator,
                               validation_steps=len(validation_samples),
-                              epochs=1,
+                              epochs=5,
                               verbose=1,
                               callbacks=[checkpoint, stopper])
 
