@@ -139,7 +139,7 @@ def load_data(path, batch_sample):
         
     return norm, angle
 
-batch_size = 32
+batch_size = 64
 
 from sklearn.utils import shuffle
 
@@ -185,7 +185,7 @@ Employ NVIDIA CNN model described in End to End Learning for Self-Driving Cars
 Model Architecture
 '''
 
-from keras.layers import Input, Lambda, Cropping2D
+from keras.layers import Input, Lambda, Cropping2D, BatchNormalization
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Activation, Flatten, Dropout
 from keras.layers.convolutional import Conv2D
@@ -203,32 +203,42 @@ model.add(Cropping2D(cropping=((65,25), (0,0)), input_shape=(row, col, ch)))
 #model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid', input_shape=(row, col, ch)))
 model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid'))
 model.add(Activation('elu'))
+model.add(BatchNormalization())
 # Convolutional layer: 5x5 kernel, 36@14x47
 model.add(Conv2D(36, (5,5), strides=(2,2), padding='valid'))
 model.add(Activation('elu'))
+model.add(BatchNormalization())
 # Convolutional layer: 5x5 kernel, 48@5x22
 model.add(Conv2D(48, (5,5), strides=(2,2), padding='valid'))
 model.add(Activation('elu'))
+model.add(BatchNormalization())
 # Convolutional layer: 3x3 kernel, 64@3x30
 model.add(Conv2D(64, (3,3), padding='valid'))
 model.add(Activation('elu'))
+model.add(BatchNormalization())
 # Convolutional layer: 3x3 kernel, 64@1x18
 model.add(Conv2D(64, (3,3), padding='valid'))
 model.add(Activation('elu'))
+model.add(BatchNormalization())
 # Flatten layer: 1164 neurons
 model.add(Flatten())
 # Fully connected layer: 100 neurons
 model.add(Dense(100))
-model.add(Dropout(.5))
 model.add(Activation('elu'))
+model.add(BatchNormalization())
+model.add(Dropout(.5))
+
 # Fully connected layer: 50 neurons
 model.add(Dense(50))
-model.add(Dropout(.5))
 model.add(Activation('elu'))
+model.add(BatchNormalization())
+model.add(Dropout(.5))
+
 # Fully connected layer: 10 neurons
 model.add(Dense(10))
-model.add(Dropout(.5))
 model.add(Activation('elu'))
+model.add(BatchNormalization())
+model.add(Dropout(.5))
 # Fully connected output lyaer
 model.add(Dense(1))
 
