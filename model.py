@@ -139,7 +139,7 @@ def load_data(path, batch_sample):
         
     return norm, angle
 
-batch_size = 64
+batch_size = 32
 
 from sklearn.utils import shuffle
 
