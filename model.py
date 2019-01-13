@@ -52,13 +52,15 @@ with open('/opt/carnd_p3/data/driving_log.csv') as csvfile:
     reader = csv.reader(csvfile)
     for line in reader:
         original_samples.append(line)
-        # if the steering==0, include only 1/7 of them.
+        
+        # if the steering==0, include only 1/8 of them.
         # it will weaken exaggerated center-bias
         if np.array(line)[3] == ' 0':
-            if np.random.randint(7) == 0:
+            if np.random.randint(8) == 0:
                 samples.append(line)
         else:
             samples.append(line)
+        
     # delete the first line since it contains headers like 'center', 'left', etc.
     original_samples = original_samples[1:]
     samples = samples[1:]
@@ -286,7 +288,7 @@ model.add(Dropout(.5))
 model.add(Dense(1))
 
 # Complie the model
-adam = optimizers.Adam(lr=1e-4)
+adam = optimizers.Adam(lr=1e-3)
 model.compile(optimizer=adam, loss='mean_squared_error', metrics=['accuracy'])
 
 # Check the summary of this new model to confirm the architecture
@@ -301,14 +303,14 @@ plot_model(model, to_file='./examples/model.png')
 
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 checkpoint = ModelCheckpoint(filepath='model.h5', monitor='val_loss', save_best_only=True)
-stopper = EarlyStopping(monitor='val_acc', min_delta=0.003, patience=3)
+stopper = EarlyStopping(monitor='val_acc', min_delta=0.0003, patience=5)
 # steps_per_epoch and validation_step are multiplied by 6 
 # since generator added center/left/right and their flipped data on the fly
 history = model.fit_generator(train_generator,
                               steps_per_epoch=int(len(train_samples)*6/batch_size),
                               validation_data=validation_generator,
                               validation_steps=int(len(validation_samples)*6/batch_size),
-                              epochs=5,
+                              epochs=10,
                               verbose=1,
                               callbacks=[checkpoint, stopper])
 
