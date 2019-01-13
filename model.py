@@ -45,11 +45,13 @@ import os
 import csv
 import numpy as np
 
-samples =[]
+original_samples = []
+samples = []
 
 with open('/opt/carnd_p3/data/driving_log.csv') as csvfile:
     reader = csv.reader(csvfile)
     for line in reader:
+        original_samples.append(line)
         # if the steering==0, include only 1/7 of them.
         # it will weaken exaggerated center-bias
         if np.array(line)[3] == ' 0':
@@ -58,6 +60,7 @@ with open('/opt/carnd_p3/data/driving_log.csv') as csvfile:
         else:
             samples.append(line)
     # delete the first line since it contains headers like 'center', 'left', etc.
+    original_samples = original_samples[1:]
     samples = samples[1:]
     #print(len(samples))
     
@@ -67,6 +70,7 @@ validation_ratio = 0.2
 train_samples, validation_samples = train_test_split(samples, test_size=validation_ratio)
 
 # Check angle distribution on train_samples and validation_samples
+angle_distribution(original_samples, './examples/original_angle_dist.png')
 angle_distribution(train_samples, './examples/init_train_angle_dist.png')
 angle_distribution(validation_samples, './examples/init_valid_angle_dist.png')
 '''
@@ -108,6 +112,8 @@ def load_data(path, batch_sample):
     # take random choice among center, left and right camera image
     # 0 = center, 1 = left, 2 = right
     coef = [0, 1, -1]
+    correction = 0.2 # to be tuned
+    
     choice = np.random.randint(3)
     path = path + batch_sample[choice].split('/')[-1]
     angle = float(batch_sample[3]) + (correction*coef[choice])
@@ -117,7 +123,6 @@ def load_data(path, batch_sample):
     # randomly flip left-right
     rand_flip = img
     if np.random.randint(2) == 0:
-        #combined_bin = np.fliplr(combined_bin)
         rand_flip = np.fliplr(img)
         angle = -angle
     # cropping bottom 25px and top 65px
@@ -135,7 +140,6 @@ def load_data(path, batch_sample):
     return norm, angle
 
 batch_size = 32
-correction = 0.25 # to be tuned
 
 from sklearn.utils import shuffle
 
@@ -215,7 +219,7 @@ model.add(Activation('elu'))
 model.add(Flatten())
 # Fully connected layer: 100 neurons
 model.add(Dense(100))
-model.add(Dropout(.2))
+model.add(Dropout(.5))
 model.add(Activation('elu'))
 # Fully connected layer: 50 neurons
 model.add(Dense(50))
