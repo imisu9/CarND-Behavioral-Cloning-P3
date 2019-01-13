@@ -50,10 +50,10 @@ samples =[]
 with open('/opt/carnd_p3/data/driving_log.csv') as csvfile:
     reader = csv.reader(csvfile)
     for line in reader:
-        # if the steering==0, include only 1/4 of them.
+        # if the steering==0, include only 1/7 of them.
         # it will weaken exaggerated center-bias
         if np.array(line)[3] == ' 0':
-            if np.random.randint(4) == 0:
+            if np.random.randint(7) == 0:
                 samples.append(line)
         else:
             samples.append(line)
@@ -118,34 +118,33 @@ def binary_img(img, s_thresh=(170,255), sx_thresh=(20,100)):
   
   return np.expand_dims(color_binary, axis=2), np.expand_dims(combined_binary, axis=2)
 
-def preprocessing(path, angle):
-    ############################
-    # Image preprocessing
-    # : similar to advanced line detection
-    # : cropping could be done here
-    # 1. cropping
-    # 2. color space conversion to hls
-    # 3. image gradient, sobel x
-    ############################
+def load_data(path, batch_sample):
+    # take random choice among center, left and right camera image
+    # 0 = center, 1 = left, 2 = right
+    coef = [0, 1, -1]
+    choice = np.random.randint(3)
+    path = path + batch_sample[choice].split('/')[-1]
+    angle = float(batch_sample[3]) + (correction*coef[choice])
     
     # load data
     img = cv2.imread(path)
+    # randomly flip left-right
+    rand_flip = img
+    if np.random.randint(2) == 0:
+        #combined_bin = np.fliplr(combined_bin)
+        rand_flip = np.fliplr(img)
+        angle = -angle
     # cropping bottom 25px and top 65px
     # examined pixs to exclude bonet area on the bottom and non-road area on the top
-    cropped_img = img[25:95,:]
+    #cropped_img = img[25:95,:]
     # mean subtraction
-    mean_sub = cropped_img - np.mean(cropped_img)
-    # normalize
+    mean_sub = rand_flip - np.mean(rand_flip)
+    # normalize after mean substraction
     norm = mean_sub / np.std(mean_sub)
     # call binary_img()
     # > color space conversion to hls
     # > image gradient, sobelx
     #color_bin, combined_bin = binary_img(norm)
-    # randomly flip left-right
-    if np.random.randint(2) == 0:
-        #combined_bin = np.fliplr(combined_bin)
-        norm = np.fliplr(norm)
-        angle = -angle
         
     return norm, angle
 
@@ -166,18 +165,7 @@ def generator(samples, batch_size=batch_size):
       path = '/opt/carnd_p3/data/IMG/'
       
       for batch_sample in batch_samples:
-        # take random choice among center, left and right image
-        # 0 = center, 1 = left, 2 = right
-        choice = np.random.randint(3)
-        if choice == 0:
-            # center image
-            image, angle = preprocessing(path + batch_sample[0].split('/')[-1], float(batch_sample[3]))
-        elif choice == 1:
-            # left image
-            image, angle = preprocessing(path + batch_sample[1].split('/')[-1], float(batch_sample[3])+correction)
-        elif choice == 2:
-            # right image
-            image, angle = preprocessing(path + batch_sample[2].split('/')[-1], float(batch_sample[3])-correction)
+        image, angle = load_data(path, batch_sample)
         images.append(image)
         angles.append(angle)
         
@@ -207,7 +195,7 @@ Employ NVIDIA CNN model described in End to End Learning for Self-Driving Cars
 Model Architecture
 '''
 
-from keras.layers import Input, Lambda
+from keras.layers import Input, Lambda, Cropping2D
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Activation, Flatten, Dropout
 from keras.layers.convolutional import Conv2D
@@ -215,14 +203,15 @@ from keras import optimizers
 import tensorflow as tf
 
 # Trimmed image format
-row, col, ch = 70, 320, 3
+row, col, ch = 160, 320, 3
 
 model = Sequential()
 # Preprocess imcoming data, centered around zero with small standard deviation
-#model.add(Lambda(lambda x: (x/127.5)-0.5, input_shape=(row, col, ch), output_shape=(row, col, ch)))
+model.add(Cropping2D(cropping=((65,25), (0,0)), input_shape=(row, col, ch)))
+#model.add(Lambda(lambda x: (x/255.0)-0.5))
 # Convolutional layer: 5x5 kernel, 24@31x98
-model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid', input_shape=(row, col, ch)))
-#model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid'))
+#model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid', input_shape=(row, col, ch)))
+model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid'))
 model.add(Activation('elu'))
 # Convolutional layer: 5x5 kernel, 36@14x47
 model.add(Conv2D(36, (5,5), strides=(2,2), padding='valid'))
