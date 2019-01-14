@@ -82,7 +82,7 @@ Define 'generator' function
 import cv2
 import numpy as np
 import sklearn
-'''
+
 def binary_img(img, s_thresh=(170,255), sx_thresh=(20,100)):
   
   # convert to HLS color space and separate the L & S channel
@@ -107,9 +107,11 @@ def binary_img(img, s_thresh=(170,255), sx_thresh=(20,100)):
   # combine the two binary thresholds
   combined_binary = np.zeros_like(sxbinary)
   combined_binary[(s_binary==1) | (sxbinary==1)] = 1
-  
-  return np.expand_dims(color_binary, axis=2), np.expand_dims(combined_binary, axis=2)
 
+  #return np.expand_dims(color_binary, axis=2), np.expand_dims(combined_binary, axis=2)
+  return np.expand_dims(combined_binary, axis=2)
+
+'''
 def load_data(batch_sample):
     path = '/opt/carnd_p3/data/IMG/'
     correction = 0.2 # to be tuned
@@ -175,6 +177,7 @@ def generator(samples, batch_size=batch_size):
             for batch_sample in batch_samples:
                 # center image
                 image = cv2.imread(path + batch_sample[0].split('/')[-1])
+                image = binary_img(image)
                 angle = float(batch_sample[3])
                 images.append(image)
                 angles.append(angle)
@@ -184,6 +187,7 @@ def generator(samples, batch_size=batch_size):
                 angles.append(-angle)
                 # left image
                 image = cv2.imread(path + batch_sample[1].split('/')[-1])
+                image = binary_img(image)
                 angle = float(batch_sample[3]) + correction
                 images.append(image)
                 angles.append(angle)
@@ -192,6 +196,7 @@ def generator(samples, batch_size=batch_size):
                 angles.append(-angle)
                 # right image
                 image = cv2.imread(path + batch_sample[2].split('/')[-1])
+                image = binary_img(image)
                 angle = float(batch_sample[3]) - correction
                 images.append(image)
                 angles.append(angle)
@@ -231,7 +236,7 @@ from keras import optimizers
 import tensorflow as tf
 
 # Trimmed image format
-row, col, ch = 160, 320, 3
+row, col, ch = 160, 320, 1
 
 model = Sequential()
 # Preprocess imcoming data, centered around zero with small standard deviation
@@ -288,7 +293,7 @@ model.add(Dropout(.5))
 model.add(Dense(1))
 
 # Complie the model
-adam = optimizers.Adam(lr=1e-3)
+adam = optimizers.Adam(lr=1e-4)
 model.compile(optimizer=adam, loss='mean_squared_error', metrics=['accuracy'])
 
 # Check the summary of this new model to confirm the architecture
