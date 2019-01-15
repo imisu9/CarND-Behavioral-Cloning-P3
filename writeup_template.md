@@ -26,7 +26,13 @@ The goals / steps of this project are the following:
 [image6]: ./examples/placeholder_small.png "Normal Image"
 [image7]: ./examples/placeholder_small.png "Flipped Image"
 [image8]: ./examples/nvidia_cnn-architecture.png "NVIDIA CNN Architecture"
-[image9]: ./examples/placeholder_small.png "Actual model architecture"
+[image9]: ./examples/accuracy.png "Accuracy"
+[image10]: ./examples/loss.png "Loss"
+[image11]: ./examples/final_train_angle_dist.png "Training data: Final Angle Distribution"
+[image12]: ./examples/init_train_angle_dist.png "Training data: Initial Angle Distribution"
+[image13]: ./examples/final_valid_angle_dist.png "Validation data: Final Angle Distribution"
+[image14]: ./examples/init_valid_angle_dist.png "Validation data: Initial Angle Distribution"
+[image15]: ./examples/model.png "Implemented Model"
 
 ## Rubric Points
 ### Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/432/view) individually and describe how I addressed each point in my implementation.  
@@ -59,6 +65,9 @@ The model.py file contains the code for training and saving the convolution neur
 I have adopted NVIDIA CNN architecture described in [End to End Learning for Self-Driving Cars](http://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf).
 
 ![alt text][image8]
+
+On a bare model, 
+1. I added Activation function first. I started out with `tanh` then switched to `elu`.
 
 #### 2. Attempts to reduce overfitting in the model
 
