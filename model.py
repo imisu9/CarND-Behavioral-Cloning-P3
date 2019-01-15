@@ -177,7 +177,7 @@ def generator(samples, batch_size=batch_size):
             for batch_sample in batch_samples:
                 # center image
                 image = cv2.imread(path + batch_sample[0].split('/')[-1])
-                image = binary_img(image)
+                #image = binary_img(image)
                 angle = float(batch_sample[3])
                 images.append(image)
                 angles.append(angle)
@@ -187,7 +187,7 @@ def generator(samples, batch_size=batch_size):
                 angles.append(-angle)
                 # left image
                 image = cv2.imread(path + batch_sample[1].split('/')[-1])
-                image = binary_img(image)
+                #image = binary_img(image)
                 angle = float(batch_sample[3]) + correction
                 images.append(image)
                 angles.append(angle)
@@ -196,7 +196,7 @@ def generator(samples, batch_size=batch_size):
                 angles.append(-angle)
                 # right image
                 image = cv2.imread(path + batch_sample[2].split('/')[-1])
-                image = binary_img(image)
+                #image = binary_img(image)
                 angle = float(batch_sample[3]) - correction
                 images.append(image)
                 angles.append(angle)
@@ -224,7 +224,6 @@ angle_distribution(val_y_gen, './examples/final_valid_angle_dist.png')
 
 '''
 Employ NVIDIA CNN model described in End to End Learning for Self-Driving Cars
-
 Model Architecture
 '''
 
@@ -236,7 +235,7 @@ from keras import optimizers, regularizers
 import tensorflow as tf
 
 # Trimmed image format
-row, col, ch = 160, 320, 1
+row, col, ch = 160, 320, 3
 
 model = Sequential()
 # Preprocess imcoming data, centered around zero with small standard deviation
