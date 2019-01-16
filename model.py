@@ -176,17 +176,19 @@ def generator(samples, batch_size=batch_size):
             
             for batch_sample in batch_samples:
                 # center image
-                image = cv2.imread(path + batch_sample[0].split('/')[-1])
+                # change color space from BGR to RGB which is used in drive.py
+                image = cv2.cvtColor(cv2.imread(path + batch_sample[0].split('/')[-1]), cv2.COLOR_BGR2RGB)
                 #image = binary_img(image)
                 angle = float(batch_sample[3])
                 images.append(image)
                 angles.append(angle)
-                
                 # center image flipped
                 images.append(np.fliplr(image))
                 angles.append(-angle)
+                
                 # left image
-                image = cv2.imread(path + batch_sample[1].split('/')[-1])
+                # change color space from BGR to RGB which is used in drive.py
+                image = cv2.cvtColor(cv2.imread(path + batch_sample[1].split('/')[-1]), cv2.COLOR_BGR2RGB)
                 #image = binary_img(image)
                 angle = float(batch_sample[3]) + correction
                 images.append(image)
@@ -194,8 +196,10 @@ def generator(samples, batch_size=batch_size):
                 # left image flipped
                 images.append(np.fliplr(image))
                 angles.append(-angle)
+                
                 # right image
-                image = cv2.imread(path + batch_sample[2].split('/')[-1])
+                # change color space from BGR to RGB which is used in drive.py
+                image = cv2.cvtColor(cv2.imread(path + batch_sample[2].split('/')[-1]), cv2.COLOR_BGR2RGB)
                 #image = binary_img(image)
                 angle = float(batch_sample[3]) - correction
                 images.append(image)
