@@ -120,7 +120,7 @@ For augmentation,
 Now I have 6 times more images at any point of time with bell-shaped, standardized distribution.
 The angle distribution of initial data look like this:
 
-![alt text][image12]
+![alt text][image11]
 
 At first, I thought preprocessing to binary image would help, which turned out to be false.
 Convolution layer all took care of it at the end of the day.
