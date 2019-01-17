@@ -78,7 +78,7 @@ angle_distribution(validation_samples, './examples/init_valid_angle_dist.png')
 '''
 Define 'generator' function
 '''
-
+'''
 import cv2
 import numpy as np
 import sklearn
@@ -111,7 +111,6 @@ def binary_img(img, s_thresh=(170,255), sx_thresh=(20,100)):
   #return np.expand_dims(color_binary, axis=2), np.expand_dims(combined_binary, axis=2)
   return np.expand_dims(combined_binary, axis=2)
 
-'''
 def load_data(batch_sample):
     path = '/opt/carnd_p3/data/IMG/'
     correction = 0.2 # to be tuned
