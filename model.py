@@ -210,17 +210,42 @@ def generator(samples, batch_size=batch_size):
             X_train = np.array(images)
             y_train = np.array(angles)
             yield shuffle(X_train, y_train)
-      
+
+# val_generator() does not perform image augmentation
+# to validate against real world situation.
+def val_generator(samples, batch_size=batch_size)
+    num_samples = len(samples)
+    while 1:  # Loop forever so the generator never terminates
+        shuffle(samples)
+        for offset in range(0, num_samples, batch_size):
+            batch_samples = samples[offset:offset+batch_size]
+            path = '/opt/carnd_p3/data/IMG/'
+            correction = 0.2 # to be tuned
+            images = []
+            angles = []
+            
+            for batch_sample in batch_samples:
+                # center image
+                # change color space from BGR to RGB which is used in drive.py
+                image = cv2.cvtColor(cv2.imread(path + batch_sample[0].split('/')[-1]), cv2.COLOR_BGR2RGB)
+                angle = float(batch_sample[3])
+                images.append(image)
+                angles.append(angle)
+                
+            X_valid = np.array(images)
+            y_valid = np.array(angles)
+            yield shuffle(X_valid, y_valid)
+
 # Complie and train the model using the generator function
 train_generator = generator(train_samples, batch_size=batch_size)
-validation_generator = generator(validation_samples, batch_size=batch_size)
+validation_generator = val_generator(validation_samples, batch_size=batch_size)
 
 # Take batch_size = 2048 to analyze data distribution
 train_X_gen, train_y_gen = [], []
 val_X_gen, val_y_gen = [], []
 
 train_X_gen, train_y_gen = next(generator(train_samples, batch_size=2048))
-val_X_gen, val_y_gen = next(generator(validation_samples, batch_size=2048))
+val_X_gen, val_y_gen = next(val_generator(validation_samples, batch_size=2048))
 
 angle_distribution(train_y_gen, './examples/final_train_angle_dist.png')
 angle_distribution(val_y_gen, './examples/final_valid_angle_dist.png')
