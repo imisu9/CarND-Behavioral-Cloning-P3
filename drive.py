@@ -81,7 +81,7 @@ def binary_img(img, s_thresh=(170,255), sx_thresh=(20,100)):
 # END
 
 controller = SimplePIController(0.1, 0.002)
-set_speed = 9
+set_speed = 30
 controller.set_desired(set_speed)
 
 
