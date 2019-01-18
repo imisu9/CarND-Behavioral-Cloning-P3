@@ -158,6 +158,8 @@ def load_data(batch_sample):
         
     return images, angles
 '''
+import cv2
+
 batch_size = 32
 
 from sklearn.utils import shuffle
@@ -213,7 +215,7 @@ def generator(samples, batch_size=batch_size):
 
 # val_generator() does not perform image augmentation
 # to validate against real world situation.
-def val_generator(samples, batch_size=batch_size)
+def val_generator(samples, batch_size=batch_size):
     num_samples = len(samples)
     while 1:  # Loop forever so the generator never terminates
         shuffle(samples)
