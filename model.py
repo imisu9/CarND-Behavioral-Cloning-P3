@@ -279,27 +279,27 @@ model.add(Cropping2D(cropping=((70,25), (0,0))))
 model.add(Conv2D(24, (5,5), strides=(2,2), padding='valid', kernel_regularizer=regularizers.l2(0.001)))
 model.add(Activation('elu'))
 model.add(BatchNormalization())
-model.add(MaxPooling2D(pool_size=(2,2)))
+#model.add(MaxPooling2D(pool_size=(2,2)))
 # Convolutional layer: 5x5 kernel, 36@14x47
 model.add(Conv2D(36, (5,5), strides=(2,2), padding='valid', kernel_regularizer=regularizers.l2(0.001)))
 model.add(Activation('elu'))
 model.add(BatchNormalization())
-model.add(MaxPooling2D(pool_size=(2,2)))
+#model.add(MaxPooling2D(pool_size=(2,2)))
 # Convolutional layer: 5x5 kernel, 48@5x22
 model.add(Conv2D(48, (5,5), strides=(2,2), padding='valid', kernel_regularizer=regularizers.l2(0.001)))
 model.add(Activation('elu'))
 model.add(BatchNormalization())
-model.add(MaxPooling2D(pool_size=(2,2)))
+#model.add(MaxPooling2D(pool_size=(2,2)))
 # Convolutional layer: 3x3 kernel, 64@3x30
 model.add(Conv2D(64, (3,3), padding='valid', kernel_regularizer=regularizers.l2(0.001)))
 model.add(Activation('elu'))
 model.add(BatchNormalization())
-model.add(MaxPooling2D(pool_size=(2,2)))
+#model.add(MaxPooling2D(pool_size=(2,2)))
 # Convolutional layer: 3x3 kernel, 64@1x18
 model.add(Conv2D(64, (3,3), padding='valid', kernel_regularizer=regularizers.l2(0.001)))
 model.add(Activation('elu'))
 model.add(BatchNormalization())
-model.add(MaxPooling2D(pool_size=(2,2)))
+#model.add(MaxPooling2D(pool_size=(2,2)))
 
 # Flatten layer: 1164 neurons
 model.add(Flatten())
