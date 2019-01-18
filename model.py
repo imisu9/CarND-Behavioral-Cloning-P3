@@ -261,6 +261,7 @@ from keras.layers import Input, Lambda, Cropping2D, BatchNormalization
 from keras.models import Sequential, Model
 from keras.layers.core import Dense, Activation, Flatten, Dropout
 from keras.layers.convolutional import Conv2D
+from keras.layers.pooling import MaxPooling2D
 from keras import optimizers, regularizers
 import tensorflow as tf
 
